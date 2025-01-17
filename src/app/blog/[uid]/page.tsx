@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -10,31 +11,34 @@ import { PrismicNextImage } from "@prismicio/next";
 import { PostCard } from "@/components/PostCard";
 import { RichText } from "@/components/RichText";
 import { Navigation } from "@/components/Navigation";
+import { Comments } from "@/components/Comments";
 
-type Params = { uid : string };
+type Params = Promise<{ uid : string }>;
 
 /**
  * This page renders a Prismic Document dynamically based on the URL.
  */
 
-export async function generateMetadata({
-                                         params,
-                                       } : {
-  params : Params;
-}) : Promise<Metadata> {
+export async function generateMetadata(
+    {
+      params,
+    } : {
+      params : Params;
+    }) : Promise<Metadata> {
+  const { uid } = await params;
   const client = createClient();
   const page = await client
-      .getByUID("blog_post", params.uid)
+      .getByUID("blog_post", uid)
       .catch(() => notFound());
 
   return {
     title: prismic.asText(page.data.title),
     description: page.data.meta_description,
     openGraph: {
-      title: page.data.meta_title || undefined,
+      title: page.data.meta_title ?? undefined,
       images: [
         {
-          url: page.data.meta_image_url || undefined,
+          url: page.data.meta_image.url ?? "",
         },
       ],
     },
@@ -42,23 +46,31 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params } : { params : Params }) {
+  const { uid } = await params;
   const client = createClient();
 
   // Fetch the current blog post page being displayed by the UID of the page
   const page = await client
-      .getByUID("blog_post", params.uid)
+      .getByUID("blog_post", uid)
       .catch(() => notFound());
 
+  const comments = await supabase
+      .from("comments")
+      .select("post_id, nickname, payload, created_at, id, published, email")
+      .eq("post_id", page.id)
+      .eq("published", true)
+      .order("created_at", { ascending: true })
+
   /**
-   * Fetch all of the blog posts in Prismic (max 2), excluding the current one, and ordered by publication date.
+   * Fetch all the blog posts in Prismic (max 2), excluding the current one, and ordered by publication date.
    *
    * We use this data to display our "recommended posts" section at the end of the blog post
    */
   const posts = await client.getAllByType("blog_post", {
-    predicates: [prismic.filter.not("my.blog_post.uid", params.uid)],
+    filters: [prismic.filter.not("my.blog_post.uid", uid)],
     orderings: [
       { field: "my.blog_post.publication_date", direction: "desc" },
-      { field: "documento.first_publication_date", direction: "desc" },
+      { field: "document.first_publication_date", direction: "desc" },
     ],
     limit: 2,
   });
@@ -93,6 +105,8 @@ export default async function Page({ params } : { params : Params }) {
         </section>
         {/* Display the content of the blog post */}
         <SliceZone slices={slices} components={components}/>
+
+        <Comments id={page.id} uid={page.uid} comments={comments.data}/>
 
         {/* Display the Recommended posts section using the posts we requested earlier */}
         <h2 className="font-bold text-3xl"></h2>
