@@ -12,7 +12,9 @@ export async function POST(req : NextRequest) {
   }
 
   const { response_url, actions, user } = JSON.parse(payload.toString());
-
+  
+  console.log({ response_url, actions, user });
+  
   let res = "";
 
   if (actions[0].action_id === "approve_comment") {

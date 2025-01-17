@@ -23,7 +23,7 @@ export async function POST(req : NextRequest) {
   }
 
   const slackRes = await fetch(
-      process.env.SLACK_COMMENT_URL ?? "",
+      `${process.env.SLACK_COMMENT_URL}`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -118,9 +118,9 @@ export async function POST(req : NextRequest) {
         }),
       }
   );
- 
+
   console.log({ fn: 'slackPost', data: slackRes })
-  
+
   return new NextResponse(JSON.stringify({ success: true }), {
     status: 200,
   });
