@@ -1,7 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase/server";
-import { iif } from "rxjs";
-import { text } from "node:stream/consumers";
 
 export async function POST(req : NextRequest) {
   const formData = await req.formData();
