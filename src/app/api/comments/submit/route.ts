@@ -23,7 +23,7 @@ export async function POST(req : NextRequest) {
   }
 
   const slackRes = await fetch(
-      "https://hooks.slack.com/services/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",
+      process.env.SLACK_COMMENT_URL ?? "",
       {
         method: "POST",
         body: JSON.stringify({
