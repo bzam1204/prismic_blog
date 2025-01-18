@@ -17,7 +17,7 @@ export async function POST(req : NextRequest) {
 
   if (actions[0].action_id === "approve_comment") {
     res = await approveComment(user.id, actions[0].value);
-  } else if (actions[0].action_id === "approve_comment") {
+  } else if (actions[0].action_id === "delete_comment") {
     res = await deleteComment(user.id, actions[0].value);
   }
 
