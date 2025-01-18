@@ -61,7 +61,7 @@ const approveComment = async (userID : string, id : string) => {
         }
 
         const BASE_URL = process.env.DEVELOPMENT_BASE_URL ?? process.env.BASE_URL;
-        const url = BASE_URL + `/api/comments/revalidate?path=/blog/${comment.data[0].post_uid}`;
+        const url = `${BASE_URL}/api/comments/revalidate?path=/blog/${comment.data[0].post_uid}`;
 
         await fetch(url, { next: { revalidate: 0 } })
 
