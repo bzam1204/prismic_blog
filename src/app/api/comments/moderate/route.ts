@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function POST(req : NextRequest) {
   const formData = await req.formData();
@@ -10,9 +11,9 @@ export async function POST(req : NextRequest) {
   }
 
   const { response_url, actions, user } = JSON.parse(payload.toString());
-  
+
   console.log({ response_url, actions, user });
-  
+
   let res = "";
 
   if (actions[0].action_id === "approve_comment") {
@@ -51,6 +52,7 @@ const approveComment = async (userID : string, id : string) => {
   if (error) {
     return `Error approving comment(${id})!`;
   } else {
+    revalidatePath("/blog")
     return `Comment (<https://supabase.com/dashboard/project/lkkcmplesxelxnvwjehm/editor/29246|${id}>) approved by *<@${userID}>*!`;
   }
 };
