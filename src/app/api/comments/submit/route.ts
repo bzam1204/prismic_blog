@@ -9,6 +9,7 @@ export async function POST(req : NextRequest) {
   const { data, error } = await supabase
       .from("comments")
       .insert({
+        post_uid: uid,
         post_id,
         email,
         nickname,

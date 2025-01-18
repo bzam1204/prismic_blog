@@ -52,7 +52,16 @@ const approveComment = async (userID : string, id : string) => {
   if (error) {
     return `Error approving comment(${id})!`;
   } else {
-    revalidatePath("/blog")
+    const { data, error } = await supabase.from("comments").select("post_uid").eq("id", id);
+
+    if (error) {
+      return `Error approving comment(${id})!`;
+    }
+    
+    console.log({ fn: approveComment, data });
+
+    revalidatePath(`/blog/${data.post_uid}`)
+
     return `Comment (<https://supabase.com/dashboard/project/lkkcmplesxelxnvwjehm/editor/29246|${id}>) approved by *<@${userID}>*!`;
   }
 };
