@@ -52,15 +52,18 @@ const approveComment = async (userID : string, id : string) => {
   if (error) {
     return `Error approving comment(${id})!`;
   } else {
-    const { data, error } = await supabase.from("comments").select("post_uid").eq("id", id);
+    const comment = await supabase
+        .from("comments")
+        .select("post_uid")
+        .eq("id", id)
 
-    if (error) {
+    if (comment.error || comment.data.length === 0) {
       return `Error approving comment(${id})!`;
     }
-    
-    console.log({ fn: approveComment, data });
 
-    revalidatePath(`/blog/${data.post_uid}`)
+    console.log({ fn: approveComment, data: comment.data, revalidatePath: `/blog/${comment.data[0].post_uid}` });
+
+    revalidatePath(`/blog/${comment.data[0].post_uid}`);
 
     return `Comment (<https://supabase.com/dashboard/project/lkkcmplesxelxnvwjehm/editor/29246|${id}>) approved by *<@${userID}>*!`;
   }
