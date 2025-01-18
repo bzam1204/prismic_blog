@@ -44,30 +44,35 @@ const deleteComment = async (userID : string, id : string) => {
 };
 
 const approveComment = async (userID : string, id : string) => {
-  const { error } = await supabase
-      .from("comments")
-      .update({ published: true })
-      .eq("id", id);
+      const { error } = await supabase
+          .from("comments")
+          .update({ published: true })
+          .eq("id", id);
 
-  if (error) {
-    return `Error approving comment(${id})!`;
-  } else {
-    const comment = await supabase
-        .from("comments")
-        .select("post_uid")
-        .eq("id", id)
+      if (error) {
+        return `Error approving comment(${id})!`;
+      } else {
+        const comment = await supabase
+            .from("comments")
+            .select("post_uid")
+            .eq("id", id)
+        if (comment.error || comment.data.length === 0) {
+          return `Error approving comment(${id})!`;
+        }
 
-    if (comment.error || comment.data.length === 0) {
-      return `Error approving comment(${id})!`;
+        const BASE_URL = process.env.DEVELOPMENT_BASE_URL ?? process.env.BASE_URL;
+        const url = BASE_URL + `/api/comments/revalidate?path=/blog/${comment.data[0].post_uid}`;
+
+        await fetch(url, { next: { revalidate: 0 } })
+
+        console.log({ fn: approveComment, data: comment.data, revalidatePath: `/blog/${comment.data[0].post_uid}`, url });
+
+        revalidatePath(`/blog/${comment.data[0].post_uid}`);
+
+        return `Comment (<https://supabase.com/dashboard/project/lkkcmplesxelxnvwjehm/editor/29246|${id}>) approved by *<@${userID}>*!`;
+      }
     }
-
-    console.log({ fn: approveComment, data: comment.data, revalidatePath: `/blog/${comment.data[0].post_uid}` });
-
-    revalidatePath(`/blog/${comment.data[0].post_uid}`);
-
-    return `Comment (<https://supabase.com/dashboard/project/lkkcmplesxelxnvwjehm/editor/29246|${id}>) approved by *<@${userID}>*!`;
-  }
-};
+;
 
 // Responde to Slack  with a message
 const respondToSlack = async (responseURL : string, text : string, type : string) => {
